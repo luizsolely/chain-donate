@@ -15,13 +15,8 @@ public interface CampaignMapper {
 
     CampaignMapper INSTANCE = Mappers.getMapper(CampaignMapper.class);
 
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "donations", ignore = true)
-    @Mapping(target = "user", ignore = true)
     Campaign toEntity(CampaignRequestDTO dto);
 
-    @Mapping(target = "progressPercentage", expression = "java(calculateProgress(campaign))")
-    @Mapping(target = "currentBalanceBTC", expression = "java(calculateCurrentBalance(campaign))")
     CampaignResponseDTO toDto(Campaign campaign);
 
     default BigDecimal calculateProgress(Campaign campaign) {

@@ -12,8 +12,6 @@ public interface DonationMapper {
 
     DonationMapper INSTANCE = Mappers.getMapper(DonationMapper.class);
 
-    @Mapping(target = "confirmed", constant = "false")
-    @Mapping(target = "timestamp", expression = "java(java.time.LocalDateTime.now())")
     Donation toEntity(DonationRequestDTO dto);
 
     DonationResponseDTO toDto(Donation donation);
