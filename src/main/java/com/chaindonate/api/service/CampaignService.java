@@ -22,6 +22,11 @@ public class CampaignService {
     private final CampaignMapper campaignMapper;
     private final UserService userService;
 
+    public Campaign findById(Long id) {
+        return campaignRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with id: " + id));
+    }
+
     public CampaignResponseDTO createCampaign(CampaignRequestDTO dto, String userEmail) {
         User user = userService.findByEmail(userEmail);
         Campaign campaign = campaignMapper.toEntity(dto);

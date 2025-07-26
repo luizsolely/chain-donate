@@ -2,6 +2,7 @@ package com.chaindonate.api.mapper;
 
 import com.chaindonate.api.dto.CampaignRequestDTO;
 import com.chaindonate.api.dto.CampaignResponseDTO;
+import com.chaindonate.api.dto.SimpleCampaignDTO;
 import com.chaindonate.api.entity.Campaign;
 import com.chaindonate.api.entity.Donation;
 import org.mapstruct.*;
@@ -26,6 +27,8 @@ public interface CampaignMapper {
         campaign.setGoalInBTC(dto.goalInBTC());
         return campaign;
     }
+
+    SimpleCampaignDTO toSimpleDto(Campaign campaign);
 
     default CampaignResponseDTO toDto(Campaign campaign) {
         if (campaign == null) {

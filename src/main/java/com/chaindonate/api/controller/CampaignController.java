@@ -19,7 +19,6 @@ public class CampaignController {
 
     private final CampaignService campaignService;
 
-
     @GetMapping
     public List<CampaignResponseDTO> getAllCampaigns() {
         return campaignService.getAllCampaigns();
@@ -38,7 +37,6 @@ public class CampaignController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
 
     @GetMapping("/{btcAddress}")
     public CampaignResponseDTO getCampaignByBtcAddress(@PathVariable String btcAddress) {
