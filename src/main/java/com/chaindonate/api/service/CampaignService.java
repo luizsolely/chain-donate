@@ -1,0 +1,49 @@
+package com.chaindonate.api.service;
+
+import com.chaindonate.api.dto.CampaignRequestDTO;
+import com.chaindonate.api.dto.CampaignResponseDTO;
+import com.chaindonate.api.entity.Campaign;
+import com.chaindonate.api.entity.User;
+import com.chaindonate.api.mapper.CampaignMapper;
+import com.chaindonate.api.repository.CampaignRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CampaignService {
+
+    private final CampaignRepository campaignRepository;
+    private final CampaignMapper campaignMapper;
+    private final UserService userService;
+
+    public CampaignResponseDTO createCampaign(CampaignRequestDTO dto, String userEmail) {
+        User user = userService.findByEmail(userEmail);
+        Campaign campaign = campaignMapper.toEntity(dto);
+
+        campaign.setUser(user);
+        campaign.setCreatedAt(LocalDateTime.now());
+        campaign.setInitialBalanceBTC(BigDecimal.ZERO); // SERÁ AJUSTADO FUTURAMENTE VIA API EXTERNA
+
+        Campaign saved = campaignRepository.save(campaign);
+        return campaignMapper.toDto(saved);
+    }
+
+    public List<CampaignResponseDTO> getAllCampaigns() {
+        return campaignRepository.findAll().stream()
+                .map(campaignMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public CampaignResponseDTO getCampaignByBtcAddress(String btcAddress) {
+        return campaignRepository.findByBtcAddress(btcAddress)
+                .map(campaignMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Campaign not found with address: " + btcAddress));
+    }
+
+}

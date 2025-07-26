@@ -15,13 +15,42 @@ public interface CampaignMapper {
 
     CampaignMapper INSTANCE = Mappers.getMapper(CampaignMapper.class);
 
-    Campaign toEntity(CampaignRequestDTO dto);
+    default Campaign toEntity(CampaignRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Campaign campaign = new Campaign();
+        campaign.setTitle(dto.title());
+        campaign.setDescription(dto.description());
+        campaign.setBtcAddress(dto.btcAddress());
+        campaign.setGoalInBTC(dto.goalInBTC());
+        return campaign;
+    }
 
-    CampaignResponseDTO toDto(Campaign campaign);
+    default CampaignResponseDTO toDto(Campaign campaign) {
+        if (campaign == null) {
+            return null;
+        }
+
+        BigDecimal currentBalance = calculateCurrentBalance(campaign);
+        BigDecimal progress = calculateProgress(campaign);
+
+        return new CampaignResponseDTO(
+                campaign.getId(),
+                campaign.getTitle(),
+                campaign.getDescription(),
+                campaign.getBtcAddress(),
+                campaign.getGoalInBTC(),
+                campaign.getInitialBalanceBTC(),
+                currentBalance,
+                progress,
+                campaign.getCreatedAt()
+        );
+    }
 
     default BigDecimal calculateProgress(Campaign campaign) {
         BigDecimal current = calculateCurrentBalance(campaign);
-        if (campaign.getGoalInBTC().compareTo(BigDecimal.ZERO) == 0) {
+        if (campaign.getGoalInBTC() == null || campaign.getGoalInBTC().compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
         return current
@@ -35,6 +64,9 @@ public interface CampaignMapper {
                 .map(Donation::getAmountBTC)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return campaign.getInitialBalanceBTC().add(total);
+        BigDecimal initial = campaign.getInitialBalanceBTC() == null ? BigDecimal.ZERO : campaign.getInitialBalanceBTC();
+
+        return initial.add(total);
     }
 }
+

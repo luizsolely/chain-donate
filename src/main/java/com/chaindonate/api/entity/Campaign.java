@@ -26,7 +26,7 @@ public class Campaign {
     private BigDecimal goalInBTC;
 
     @Column(nullable = false)
-    private BigDecimal initialBalanceBTC; // ← campo adicionado
+    private BigDecimal initialBalanceBTC;
 
     private LocalDateTime createdAt;
 
