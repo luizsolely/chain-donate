@@ -13,6 +13,7 @@ spring:
   jackson:
     serialization:
       INDENT_OUTPUT: true
+      WRITE_BIGDECIMAL_AS_PLAIN: true
   application:
     name: chaindonate-backend
 

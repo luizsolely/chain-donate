@@ -14,19 +14,33 @@ import java.util.List;
 public class DonationService {
 
     private final DonationRepository donationRepository;
+    private final CampaignService campaignService;
     private final BlockchainClient blockchainClient;
 
-    public List<Donation> findByCampaignId(Long campaignId) {
-        return donationRepository.findByCampaignId(campaignId);
+    public List<Donation> getOrSyncDonationsByCampaignId(Long campaignId) {
+        List<Donation> donations = donationRepository.findByCampaignId(campaignId);
+
+        if (!donations.isEmpty()) {
+            return donations;
+        }
+
+        Campaign campaign = campaignService.findById(campaignId);
+
+        List<Donation> freshDonations = blockchainClient.getDonationsForAddress(campaign.getBtcAddress(), campaign);
+
+        if (freshDonations.isEmpty()) {
+            return freshDonations;
+        }
+
+        return donationRepository.saveAll(freshDonations);
     }
 
-    public void syncDonations(Campaign campaign) {
-        List<Donation> blockchainDonations = blockchainClient.getDonationsForAddress(campaign.getBtcAddress(), campaign);
+    public List<Donation> forceSyncDonationsByCampaignId(Long campaignId) {
+        Campaign campaign = campaignService.findById(campaignId);
 
-        for (Donation donation : blockchainDonations) {
-            if (!donationRepository.existsByTxHash(donation.getTxHash())) {
-                donationRepository.save(donation);
-            }
-        }
+        donationRepository.deleteByCampaignId(campaignId);
+
+        List<Donation> newDonations = blockchainClient.getDonationsForAddress(campaign.getBtcAddress(), campaign);
+        return donationRepository.saveAll(newDonations);
     }
 }

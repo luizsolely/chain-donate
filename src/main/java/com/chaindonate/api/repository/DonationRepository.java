@@ -12,4 +12,6 @@ public interface DonationRepository extends JpaRepository<Donation,Long> {
     Optional<Donation> findByTxHashAndCampaignId(String txHash, Long campaignId);
 
     boolean existsByTxHash(String txHash);
+
+    void deleteByCampaignId(Long campaignId);
 }
