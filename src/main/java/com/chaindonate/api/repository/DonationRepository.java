@@ -8,5 +8,8 @@ import java.util.Optional;
 
 public interface DonationRepository extends JpaRepository<Donation,Long> {
     List<Donation> findByCampaignId(Long campaignId);
+
     Optional<Donation> findByTxHashAndCampaignId(String txHash, Long campaignId);
+
+    boolean existsByTxHash(String txHash);
 }

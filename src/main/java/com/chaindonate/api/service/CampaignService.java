@@ -1,5 +1,6 @@
 package com.chaindonate.api.service;
 
+import com.chaindonate.api.client.MempoolSpaceClient;
 import com.chaindonate.api.dto.CampaignRequestDTO;
 import com.chaindonate.api.dto.CampaignResponseDTO;
 import com.chaindonate.api.entity.Campaign;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CampaignService {
 
+    private final MempoolSpaceClient  mempoolSpaceClient;
     private final CampaignRepository campaignRepository;
     private final CampaignMapper campaignMapper;
     private final UserService userService;
@@ -33,11 +35,15 @@ public class CampaignService {
 
         campaign.setUser(user);
         campaign.setCreatedAt(LocalDateTime.now());
-        campaign.setInitialBalanceBTC(BigDecimal.ZERO); // SERÁ AJUSTADO FUTURAMENTE VIA API EXTERNA
+
+        // Consulta o saldo atual do endereço
+        BigDecimal initialBalance = mempoolSpaceClient.getAddressBalance(dto.btcAddress());
+        campaign.setInitialBalanceBTC(initialBalance);
 
         Campaign saved = campaignRepository.save(campaign);
         return campaignMapper.toDto(saved);
     }
+
 
     public List<CampaignResponseDTO> getAllCampaigns() {
         return campaignRepository.findAll().stream()
