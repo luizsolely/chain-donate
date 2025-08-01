@@ -1,6 +1,17 @@
-.env
-*.env
-/target
+# IntelliJ IDEA
 .idea/
 *.iml
-".env" 
+out/
+
+# Maven
+target/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
