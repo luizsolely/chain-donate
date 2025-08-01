@@ -1,6 +1,7 @@
 package com.chaindonate.api.service;
 
 import com.chaindonate.api.entity.User;
+import com.chaindonate.api.exception.UserNotFoundException;
 import com.chaindonate.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,6 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 }

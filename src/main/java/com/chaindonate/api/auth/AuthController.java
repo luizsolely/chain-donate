@@ -4,13 +4,13 @@ import com.chaindonate.api.auth.dto.*;
 import com.chaindonate.api.dto.SimpleCampaignDTO;
 import com.chaindonate.api.dto.UserResponseDTO;
 import com.chaindonate.api.entity.User;
-import com.chaindonate.api.mapper.CampaignMapper;
+import com.chaindonate.api.exception.EmailAlreadyInUseException;
+import com.chaindonate.api.exception.InvalidCredentialsException;
 import com.chaindonate.api.repository.UserRepository;
 import com.chaindonate.api.auth.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final CampaignMapper campaignMapper;
     private final UserRepository userRepo;
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
@@ -33,6 +32,11 @@ public class AuthController {
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPasswordHash(encoder.encode(request.password()));
+
+        if (userRepo.findByEmail(request.email()).isPresent()) {
+            throw new EmailAlreadyInUseException("Email already in use: " + request.email());
+        }
+
         userRepo.save(user);
 
         var token = jwtService.generateToken(user.getEmail());
@@ -46,10 +50,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        var authToken = new UsernamePasswordAuthenticationToken(request.email(), request.password());
-        authManager.authenticate(authToken);
+        try {
+            var authToken = new UsernamePasswordAuthenticationToken(request.email(), request.password());
+            authManager.authenticate(authToken);
+        } catch (BadCredentialsException ex) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
 
-        var user = userRepo.findByEmail(request.email()).orElseThrow(() -> new UsernameNotFoundException(request.email()));
+        var user = userRepo.findByEmail(request.email())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+
         var token = jwtService.generateToken(user.getEmail());
 
         List<SimpleCampaignDTO> campaignDTOs = user.getCampaigns().stream()

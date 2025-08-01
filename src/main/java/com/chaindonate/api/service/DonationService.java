@@ -6,6 +6,8 @@ import com.chaindonate.api.entity.Donation;
 import com.chaindonate.api.repository.DonationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -13,27 +15,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DonationService {
 
+    private static final Logger log = LoggerFactory.getLogger(DonationService.class);
     private final DonationRepository donationRepository;
     private final CampaignService campaignService;
     private final BlockchainClient blockchainClient;
 
     public List<Donation> getOrSyncDonationsByCampaignId(Long campaignId) {
-        List<Donation> donations = donationRepository.findByCampaignId(campaignId);
-
-        if (!donations.isEmpty()) {
-            return donations;
-        }
-
         Campaign campaign = campaignService.findById(campaignId);
 
-        List<Donation> freshDonations = blockchainClient.getDonationsForAddress(campaign.getBtcAddress(), campaign);
+        try {
+            List<Donation> freshDonations = blockchainClient.getDonationsForAddress(campaign.getBtcAddress(), campaign);
 
-        if (freshDonations.isEmpty()) {
-            return freshDonations;
+            if (!freshDonations.isEmpty()) {
+                return donationRepository.saveAll(freshDonations);
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar doações da blockchain para campanha {}: {}", campaignId, e.getMessage(), e);
         }
 
-        return donationRepository.saveAll(freshDonations);
+        return donationRepository.findByCampaignId(campaignId);
     }
+
 
     public List<Donation> forceSyncDonationsByCampaignId(Long campaignId) {
         Campaign campaign = campaignService.findById(campaignId);

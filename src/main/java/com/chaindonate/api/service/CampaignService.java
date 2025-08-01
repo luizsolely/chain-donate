@@ -5,6 +5,8 @@ import com.chaindonate.api.dto.CampaignRequestDTO;
 import com.chaindonate.api.dto.CampaignResponseDTO;
 import com.chaindonate.api.entity.Campaign;
 import com.chaindonate.api.entity.User;
+import com.chaindonate.api.exception.BtcAddressAlreadyInUseException;
+import com.chaindonate.api.exception.CampaignNotFoundException;
 import com.chaindonate.api.mapper.CampaignMapper;
 import com.chaindonate.api.repository.CampaignRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +28,14 @@ public class CampaignService {
 
     public Campaign findById(Long id) {
         return campaignRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Campaign not found with id: " + id));
+                .orElseThrow(() -> new CampaignNotFoundException("Campaign not found with id: " + id));
     }
 
     public CampaignResponseDTO createCampaign(CampaignRequestDTO dto, String userEmail) {
+        if(campaignRepository.findByBtcAddress(dto.btcAddress()).isPresent()) {
+            throw new BtcAddressAlreadyInUseException("BTC address already in use: " +  dto.btcAddress());
+        }
+
         User user = userService.findByEmail(userEmail);
         Campaign campaign = campaignMapper.toEntity(dto);
 
@@ -44,7 +50,6 @@ public class CampaignService {
         return campaignMapper.toDto(saved);
     }
 
-
     public List<CampaignResponseDTO> getAllCampaigns() {
         return campaignRepository.findAll().stream()
                 .map(campaignMapper::toDto)
@@ -54,7 +59,7 @@ public class CampaignService {
     public CampaignResponseDTO getCampaignByBtcAddress(String btcAddress) {
         return campaignRepository.findByBtcAddress(btcAddress)
                 .map(campaignMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Campaign not found with address: " + btcAddress));
+                .orElseThrow(() -> new CampaignNotFoundException("Campaign not found with address: " + btcAddress));
     }
 
 }
