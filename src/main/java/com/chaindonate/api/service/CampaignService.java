@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +33,9 @@ public class CampaignService {
     }
 
     public CampaignResponseDTO createCampaign(CampaignRequestDTO dto, String userEmail) {
+        if (dto.goalInBTC() == null || dto.goalInBTC().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidParameterException("Goal must be greater than 0");
+        }
         if(campaignRepository.findByBtcAddress(dto.btcAddress()).isPresent()) {
             throw new BtcAddressAlreadyInUseException("BTC address already in use: " +  dto.btcAddress());
         }

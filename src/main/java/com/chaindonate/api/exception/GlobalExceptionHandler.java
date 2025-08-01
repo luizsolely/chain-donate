@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.InvalidParameterException;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -58,6 +60,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BtcAddressAlreadyInUseException.class)
     public ResponseEntity<ErrorResponse> handleBtcAddressAlreadyInUse(BtcAddressAlreadyInUseException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.CONFLICT;
+        ErrorResponse error = new ErrorResponse(
+                status.value(),
+                status.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(BtcAddressDoesntExistsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAddress(BtcAddressDoesntExistsException ex, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ErrorResponse error = new ErrorResponse(
+                status.value(),
+                status.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidParameters(InvalidParameterException ex, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse error = new ErrorResponse(
                 status.value(),
                 status.getReasonPhrase(),

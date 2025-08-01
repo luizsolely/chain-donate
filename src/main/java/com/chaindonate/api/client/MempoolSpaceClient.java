@@ -2,10 +2,12 @@ package com.chaindonate.api.client;
 
 import com.chaindonate.api.entity.Campaign;
 import com.chaindonate.api.entity.Donation;
+import com.chaindonate.api.exception.BtcAddressDoesntExistsException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,6 +29,10 @@ public class MempoolSpaceClient implements BlockchainClient {
                     .get()
                     .uri("/address/{address}", btcAddress)
                     .retrieve()
+                    .onStatus(
+                            status -> status.value() == 400,
+                            clientResponse -> Mono.error(new BtcAddressDoesntExistsException("Invalid Bitcoin address: " + btcAddress))
+                    )
                     .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .block();
 
@@ -45,14 +51,17 @@ public class MempoolSpaceClient implements BlockchainClient {
 
             long balanceSats = (funded != null ? funded : 0L) - (spent != null ? spent : 0L);
 
-            return BigDecimal.valueOf(balanceSats).movePointLeft(8); // sats → BTC
+            return BigDecimal.valueOf(balanceSats).movePointLeft(8);
 
+        } catch (BtcAddressDoesntExistsException e) {
+            throw e;
         } catch (WebClientResponseException e) {
-            throw new RuntimeException("Error fetching address balance from blockchain API: " + e.getMessage(), e);
+            throw new RuntimeException("Blockchain API returned error: " + e.getStatusCode(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Unexpected error fetching address balance", e);
+            throw new RuntimeException("Unexpected error fetching BTC balance", e);
         }
     }
+
 
     @Override
     public List<Donation> getDonationsForAddress(String btcAddress, Campaign campaign) {

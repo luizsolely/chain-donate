@@ -28,6 +28,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/actuator/health",
+                                "/actuator/info"
+                        ).permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/campaigns/**").permitAll()
                         .anyRequest().authenticated()

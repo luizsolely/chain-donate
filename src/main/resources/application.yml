@@ -10,12 +10,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  jackson:
-    serialization:
-      INDENT_OUTPUT: true
-      WRITE_BIGDECIMAL_AS_PLAIN: true
-  application:
-    name: chaindonate-backend
 
 jwt:
   secret: ${JWT_SECRET}
@@ -23,3 +17,9 @@ jwt:
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
